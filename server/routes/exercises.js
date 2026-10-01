@@ -12,6 +12,37 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/exercises/stats/weekly -> totals for the last 7 days
+router.get("/stats/weekly", async (req, res) => {
+  try {
+    const since = new Date();
+    since.setUTCDate(since.getUTCDate() - 6);
+    since.setUTCHours(0, 0, 0, 0);
+
+    const recent = await Exercise.find({ date: { $gte: since } });
+
+    const byTypeMap = {};
+    let totalMinutes = 0;
+
+    recent.forEach((e) => {
+      totalMinutes += e.duration;
+      if (!byTypeMap[e.type]) {
+        byTypeMap[e.type] = { type: e.type, sessions: 0, totalMinutes: 0 };
+      }
+      byTypeMap[e.type].sessions += 1;
+      byTypeMap[e.type].totalMinutes += e.duration;
+    });
+
+    res.json({
+      totalMinutes,
+      sessions: recent.length,
+      byType: Object.values(byTypeMap),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/exercises  -> create a workout
 router.post("/", async (req, res) => {
   try {
