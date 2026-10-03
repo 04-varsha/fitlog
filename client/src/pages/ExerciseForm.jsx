@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
 import { TYPES, toDateStr } from "../utils";
 
 export default function ExerciseForm() {
+  const { id } = useParams(); // only present on /edit/:id
+  const isEdit = Boolean(id);
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -15,12 +17,30 @@ export default function ExerciseForm() {
 
   const [error, setError] = useState("");
 
-  // One handler for every input: the input's `name` decides which field changes
+  // In edit mode, load the existing workout and fill the form
+  useEffect(() => {
+    if (!isEdit) return;
+
+    api
+      .get(`/exercises/${id}`)
+      .then((res) => {
+        const e = res.data;
+
+        setForm({
+          type: e.type,
+          description: e.description,
+          duration: e.duration,
+          date: e.date.slice(0, 10),
+        });
+      })
+      .catch(() => setError("Could not load this workout."));
+  }, [id, isEdit]);
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // stop the browser's default page reload
+    e.preventDefault();
 
     if (!form.description.trim() || Number(form.duration) < 1) {
       setError(
@@ -29,11 +49,17 @@ export default function ExerciseForm() {
       return;
     }
 
+    const payload = {
+      ...form,
+      duration: Number(form.duration),
+    };
+
     try {
-      await api.post("/exercises", {
-        ...form,
-        duration: Number(form.duration),
-      });
+      if (isEdit) {
+        await api.put(`/exercises/${id}`, payload);
+      } else {
+        await api.post("/exercises", payload);
+      }
 
       navigate("/");
     } catch {
@@ -44,7 +70,9 @@ export default function ExerciseForm() {
   return (
     <div className="row justify-content-center">
       <div className="col-12 col-md-8 col-lg-6">
-        <h3 className="mb-3">Add Workout</h3>
+        <h3 className="mb-3">
+          {isEdit ? "Edit Workout" : "Add Workout"}
+        </h3>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
@@ -104,7 +132,7 @@ export default function ExerciseForm() {
           </div>
 
           <button type="submit" className="btn btn-primary me-2">
-            Save
+            {isEdit ? "Update" : "Save"}
           </button>
 
           <button
