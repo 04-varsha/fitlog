@@ -11,7 +11,10 @@ export default function Stats() {
   });
 
   const [error, setError] = useState("");
-  const [goal, setGoal] = useState(150);
+
+  const [goal, setGoal] = useState(
+    () => Number(localStorage.getItem("fitlog-goal")) || 150
+  );
 
   useEffect(() => {
     api
@@ -19,6 +22,10 @@ export default function Stats() {
       .then((res) => setStats(res.data))
       .catch(() => setError("Could not load stats."));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("fitlog-goal", goal);
+  }, [goal]);
 
   return (
     <>
