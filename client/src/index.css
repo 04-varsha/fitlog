@@ -1,3 +1,22 @@
 body {
   background: #f4f6f9;
 }
+
+.card {
+  border: 0;
+  border-radius: 12px;
+}
+
+.card-footer {
+  background: transparent;
+  border-top: 0;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.progress {
+  border-radius: 12px;
+}
