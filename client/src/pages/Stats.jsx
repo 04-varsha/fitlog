@@ -45,7 +45,12 @@ export default function Stats() {
 
   return (
     <>
-      <h3 className="mb-3">Weekly Stats</h3>
+      <h3 className="mb-3">
+        Weekly Stats{" "}
+        <small className="text-muted fs-6">
+          (last 7 days)
+        </small>
+      </h3>
 
       {error && (
         <div className="alert alert-danger">
@@ -62,7 +67,7 @@ export default function Stats() {
       <div className="row g-3 mb-4">
         <div className="col-6 col-md-3">
           <StatCard
-            icon="⏱️"
+            icon="⏱"
             value={stats.totalMinutes}
             label="Minutes this week"
           />
@@ -92,6 +97,36 @@ export default function Stats() {
           />
         </div>
       </div>
+
+      <h5>Minutes by type</h5>
+
+      {stats.byType.length === 0 ? (
+        <p className="text-muted">
+          No workouts in the last 7 days.
+        </p>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Sessions</th>
+                <th>Total minutes</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {stats.byType.map((row) => (
+                <tr key={row.type}>
+                  <td>{row.type}</td>
+                  <td>{row.sessions}</td>
+                  <td>{row.totalMinutes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   );
 }
