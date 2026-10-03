@@ -18,6 +18,7 @@ export default function App() {
           <Route path="/add" element={<ExerciseForm key="add" />} />
           <Route path="/edit/:id" element={<ExerciseForm key="edit" />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="*" element={<h3>404: Page not found</h3>} />
         </Routes>
       </div>
     </>
