@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../api";
 import StatCard from "../components/StatCard";
 import GoalBar from "../components/GoalBar";
+import { calcStreaks } from "../utils";
 
 export default function Stats() {
   const [stats, setStats] = useState({
@@ -10,16 +11,31 @@ export default function Stats() {
     byType: [],
   });
 
-  const [error, setError] = useState("");
+  const [streaks, setStreaks] = useState({
+    current: 0,
+    best: 0,
+  });
 
   const [goal, setGoal] = useState(
     () => Number(localStorage.getItem("fitlog-goal")) || 150
   );
 
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    api
-      .get("/exercises/stats/weekly")
-      .then((res) => setStats(res.data))
+    Promise.all([
+      api.get("/exercises/stats/weekly"),
+      api.get("/exercises"),
+    ])
+      .then(([statsRes, listRes]) => {
+        setStats(statsRes.data);
+
+        setStreaks(
+          calcStreaks(
+            listRes.data.map((e) => e.date.slice(0, 10))
+          )
+        );
+      })
       .catch(() => setError("Could not load stats."));
   }, []);
 
@@ -31,7 +47,11 @@ export default function Stats() {
     <>
       <h3 className="mb-3">Weekly Stats</h3>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && (
+        <div className="alert alert-danger">
+          {error}
+        </div>
+      )}
 
       <GoalBar
         current={stats.totalMinutes}
@@ -39,20 +59,36 @@ export default function Stats() {
         onGoalChange={setGoal}
       />
 
-      <div className="row row-cols-1 row-cols-md-2 g-3">
-        <div className="col">
+      <div className="row g-3 mb-4">
+        <div className="col-6 col-md-3">
           <StatCard
-            value={stats.totalMinutes}
-            label="Total Minutes"
             icon="⏱️"
+            value={stats.totalMinutes}
+            label="Minutes this week"
           />
         </div>
 
-        <div className="col">
+        <div className="col-6 col-md-3">
           <StatCard
+            icon="💪"
             value={stats.sessions}
-            label="Sessions"
-            icon="🏋️"
+            label="Workouts this week"
+          />
+        </div>
+
+        <div className="col-6 col-md-3">
+          <StatCard
+            icon="🔥"
+            value={streaks.current}
+            label="Current streak (days)"
+          />
+        </div>
+
+        <div className="col-6 col-md-3">
+          <StatCard
+            icon="🏆"
+            value={streaks.best}
+            label="Best streak (days)"
           />
         </div>
       </div>
